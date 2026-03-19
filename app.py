@@ -8,3 +8,75 @@ figure = px.pie(données, values='qte', names='region', title='quantité vendue 
 figure.write_html('ventes-par-region.html')
 
 print('ventes-par-région.html généré avec succès !')
+
+# Calcul du Chiffre d'Affaires (CA)
+données['CA'] = données['prix'] * données['qte']
+
+# A : Moyenne et Médiane (CA et Volume)
+stats_a = données.groupby('produit').agg({
+    'CA': ['mean', 'median'],
+    'qte': ['mean', 'median']
+}).reset_index()
+
+stats_a.columns = ['produit', 'CA_Moyenne', 'CA_Mediane', 'Vol_Moyenne', 'Vol_Mediane']
+
+fig_a = px.bar(stats_a, 
+               x='produit', 
+               y=['CA_Moyenne', 'CA_Mediane'],
+               barmode='group',
+               title='Analyse A : Moyenne vs Médiane du CA par Produit',
+               labels={'value': 'Montant (€)', 'variable': 'Indicateur'})
+
+fig_a.write_html('analyse_a_moyenne_mediane.html')
+
+
+# B : Écart-type et Variance (Volume uniquement)
+stats_b = données.groupby('produit')['qte'].agg(['std', 'var']).reset_index()
+
+stats_b.columns = ['produit', 'Vol_Ecart_Type', 'Vol_Variance']
+
+fig_b = px.bar(stats_b, 
+               x='produit', 
+               y='Vol_Variance',
+               title='Analyse B : Variance du Volume des Ventes par Produit',
+               color='produit',
+               labels={'Vol_Variance': 'Variance'})
+
+fig_b.write_html('analyse_b_dispersion.html')
+
+print("Calculs terminés avec succès !")
+print("- Fichier 'analyse_a_moyenne_mediane.html' généré.")
+print("- Fichier 'analyse_b_dispersion.html' généré.")
+
+# résumé par produit (Somme totale)
+ventes_totales = données.groupby('produit').agg({
+    'qte': 'sum',
+    'CA': 'sum'
+}).reset_index()
+
+# --- GRAPHIQUE A : Ventes par produit (Volume) ---
+fig_ventes = px.bar(ventes_totales, 
+                    x='produit', 
+                    y='qte',
+                    title='Total des unités vendues par produit',
+                    labels={'qte': 'Nombre d\'unités', 'produit': 'Produit'},
+                    color='produit',
+                    text_auto=True) # Affiche le chiffre au-dessus des barres
+
+fig_ventes.write_html('ventes_par_produit.html')
+
+
+# --- GRAPHIQUE B : Chiffre d'affaires par produit ---
+fig_ca = px.bar(ventes_totales, 
+                x='produit', 
+                y='CA',
+                title='Chiffre d\'affaires total par produit',
+                labels={'CA': 'Chiffre d\'affaires (€)', 'produit': 'Produit'},
+                color='produit',
+                text_auto='.2f') # Affiche le CA avec 2 décimales
+
+fig_ca.write_html('ca_par_produit.html')
+
+print("Nouveaux graphiques générés :")
+print("ventes_par_produit.html")
+print("ca_par_produit.html")
