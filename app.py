@@ -1,5 +1,7 @@
 import plotly.express as px
 import pandas as pd
+import os
+from flask import Flask, send_from_directory
 
 données = pd.read_csv('https://docs.google.com/spreadsheets/d/e/2PACX-1vSC4KusfFzvOsr8WJRgozzsCxrELW4G4PopUkiDbvrrV2lg0S19-zeryp02MC9WYSVBuzGCUtn8ucZW/pub?output=csv')
 
@@ -80,3 +82,43 @@ fig_ca.write_html('ca_par_produit.html')
 print("Nouveaux graphiques générés :")
 print("ventes_par_produit.html")
 print("ca_par_produit.html")
+
+# --- AJOUT DU SERVEUR WEB ---
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return """
+    <h1>Résultats de l'analyse</h1>
+    <ul>
+        <li><a href="/graph1">Ventes par région</a></li>
+        <li><a href="/graph2">Moyenne et Médiane</a></li>
+        <li><a href="/graph3">Ecart-type et variance</a></li>
+        <li><a href="/graph4">ventes par produit</a></li>
+        <li><a href="/graph5">chiffre d'affaires par produit</a></li>
+    </ul>
+    """
+
+@app.route('/graph1')
+def show_graph1():
+    return send_from_directory('.', 'ventes-par-region.html')
+
+@app.route('/graph2')
+def show_graph2():
+    return send_from_directory('.', 'analyse_a_moyenne_mediane.html')
+
+@app.route('/graph3')
+def show_graph3():
+    return send_from_directory('.', 'analyse_b_dispersion.html')
+
+@app.route('/graph4')
+def show_graph4():
+    return send_from_directory('.', 'ventes_par_produit.html')
+
+@app.route('/graph5')
+def show_graph5():
+    return send_from_directory('.', 'ca_par_produit.html')
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
